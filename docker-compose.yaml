@@ -1,0 +1,52 @@
+version: "3.7"
+services:
+  bp2023:
+    build: .
+    container_name: moj-mysql
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - bpnet
+    restart: always
+  redis:
+    image: redis
+    container_name: redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - bpnet
+  mysql:
+    image: mysql
+    container_name: mysql
+    environment:
+      - MYSQL_DATABASE=ednevnik
+      - MYSQL_USER=ednevnik
+      - MYSQL_PASSWORD=csdigital
+      - MYSQL_ROOT_PASSWORD=csdigital
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - bpnet
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    networks:
+      - bpnet
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+    networks:
+      - bpnet
+volumes:
+  mysql:
+networks:
+  bpnet:
+    driver: bridge
