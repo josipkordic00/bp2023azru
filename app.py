@@ -18,17 +18,47 @@ def json_serializer(data):
 
 def json_deserializer(data):
     return json.loads(data)
-@app.route("/")
+@app.route("/evidentions")
 def index():
-    api = session.query(Ucenik).all()
-    return render_template('evidention.html', api=api)
-    
-@app.route("/api/students")
-def getStudents():
-    students = session.query(Ucenik).all()
-    serialized_students = [{"id": student.id, "ime": student.ime, "prezime": student.prezime, "email": student.email, "sifra": student.sifra, "broj_telefona": student.broj_telefona, "prisutnost": student.prisutnost} for student in students]
-    return jsonify(serialized_students)
+    evd = session.query(Ucenik).all()
+    return render_template('evidentions.html', evd=evd)
 
+@app.route("/")
+def another_page():
+    index = session.query(Ucionica).all()
+    return render_template('index.html', index=index)
+
+@app.route("/evd/evidention")
+def get_evidention():
+    evidentions = session.query(Evidencija).join(Evidencija.ustanova).join(Evidencija.ucionica).all()
+    serialized_evidentions = [
+        {
+            "id": evidention.id,
+            "institution_name": evidention.ustanova.naziv,
+            "students": evidention.ucenici,
+            "classroom_number": evidention.ucionica.broj_ucionice,
+            "date": evidention.datum
+        }
+        for evidention in evidentions
+    ] 
+    return jsonify(serialized_evidentions)
+
+@app.route("/index/classroom")
+def get_classroom_info():
+    classrooms = session.query(Ucionica).join(Ucionica.ustanova).join(Ucionica.nastavnik).all()
+    serialized_classrooms = [
+        {
+            "id": classroom.id,
+            "classroom_number": classroom.broj_ucionice,
+            "institution": classroom.ustanova.naziv,
+            "teacher_name": classroom.nastavnik.ime,
+            "teacher_surname": classroom.nastavnik.prezime,
+            "date": classroom.datum_rezervacije,
+            "taken":classroom.zauzeto
+        }
+        for classroom in classrooms
+    ] 
+    return jsonify(serialized_classrooms)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

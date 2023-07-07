@@ -29,20 +29,18 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav justify-content-center">
-          <li class="nav-item">
-            <a class="nav-link" href="index.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="classrooms.html">Classrooms</a>
-          </li>
+        <ul class="navbar-nav">
           <li class="nav-item active">
-            <a class="nav-link" href="evidentions.html"
-              >Evidentions <span class="sr-only">(current)</span></a
-            >
+            <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="notifications.html">Notifications</a>
+            <a class="nav-link" href="/classrooms">Classrooms</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/evidentions">Evidentions</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/notifications">Notifications</a>
           </li>
         </ul>
       </div>
@@ -52,35 +50,31 @@
     <div class="d-flex flex-column justify-content-center align-items-center">
       <br />
       <br />
-      <select class="custom-select col-4">
+      <div class="d-flex flex-column justify-content-center align-items-center"><p>Choose evidention date:</p>
+      <select class="custom-select col-10">
         <option selected>Choose evidention date</option>
-        <option value="1">One</option>
-        <option value="2">Two</option>
-        <option value="3">Three</option>
       </select>
+    </div>
       <br />
     </div>
     <table class="table">
       <thead>
         <tr>
           <th scope="col">#</th>
-          <th scope="col">E-mail</th>
-          <th scope="col">Classroom</th>
+          <th scope="col">Name</th>
+          <th scope="col">Classroom Number</th>
           <th scope="col">Institution</th>
         </tr>
       </thead>
       <tbody>
-        {% for student in students %}
         <tr>
-          <th scope="row">{{ loop.index }}</th>
-          <td>{{ student.ime }}</td>
-          <td>{{ student.prezime }}</td>
-          <td>{{ student.email }}</td>
+          <th scope="row"></th>
+          <td></td>
+          <td></td>
+          <td></td>
         </tr>
-        {% endfor %}
       </tbody>
     </table>
-    <button id="studentBtn" type="submit">BTN</button>
 
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -99,22 +93,103 @@
     ></script>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
-      $(document).on('click', '#studentBtn', function() {
-        $.ajax({
-          type: "GET",
-          url: "http://127.0.0.1:5000/api/students",
-          success: function (data) {
-            console.log(data)
-            // Ovdje možete manipulirati dobivenim podacima
-            // na primjer, ažurirati HTML elemente s podacima
-            $("#kakao").html("Podaci o studentu: " + data[0].ime + ", " + data[0].prezime + ", " + data[0].email);
-          },
-          error: function (error) {
-            console.error("Nastala je greška:", error);
-          },
+      $(document).ready(function () {
+        // Fetch data on page load
+        fetchData();
+
+        // Attach event listener to select element
+        $("select.custom-select").change(function () {
+          var selectedDate = $(this).val();
+          if (selectedDate !== "") {
+            // Fetch data based on selected date
+            fetchSelectedData(selectedDate);
+          } else {
+            // If no date is selected, refresh the entire data
+            fetchData();
+          }
         });
+
+        function fetchData() {
+          $.ajax({
+            type: "GET",
+            url: "/evd/evidention",
+            success: function (data) {
+              // Clear the table body
+              $("tbody").empty();
+
+              // Group the data by date
+              var groupedData = groupDataByDate(data);
+
+              // Populate the select dropdown with unique date options
+              var select = $("select.custom-select");
+              select.empty();
+              Object.keys(groupedData).forEach(function (date) {
+                var option = $("<option>").val(date).text(date);
+                select.append(option);
+              });
+
+              // Append each row to the table
+              Object.values(groupedData).forEach(function (group) {
+                group.forEach(function (evidention) {
+                  var row = $("<tr>");
+                  row.append($("<th>").text(evidention.id));
+                  row.append($("<td>").text(evidention.students));
+                  row.append($("<td>").text(evidention.classroom_number));
+                  row.append($("<td>").text(evidention.institution));
+                  $("tbody").append(row);
+                });
+              });
+            },
+            error: function (error) {
+              console.error("Nastala je greška:", error);
+            },
+          });
+        }
+
+        function fetchSelectedData(selectedDate) {
+          $.ajax({
+            type: "GET",
+            url: "/evd/evidention",
+            success: function (data) {
+              // Filter the data based on the selected date
+              var filteredData = data.filter(function (evidention) {
+                var date = new Date(evidention.date);
+                var formattedDate = date.toLocaleDateString();
+                return formattedDate === selectedDate;
+              });
+
+              // Clear the table body
+              $("tbody").empty();
+
+              // Append the filtered data to the table
+              filteredData.forEach(function (evidention) {
+                var row = $("<tr>");
+                row.append($("<th>").text(evidention.id));
+                row.append($("<td>").text(evidention.students));
+                row.append($("<td>").text(evidention.classroom_number));
+                row.append($("<td>").text(evidention.institution));
+                $("tbody").append(row);
+              });
+            },
+            error: function (error) {
+              console.error("Nastala je greška:", error);
+            },
+          });
+        }
+
+        function groupDataByDate(data) {
+          var groupedData = {};
+          data.forEach(function (evidention) {
+            var date = new Date(evidention.date);
+            var formattedDate = date.toLocaleDateString();
+            if (!groupedData[formattedDate]) {
+              groupedData[formattedDate] = [];
+            }
+            groupedData[formattedDate].push(evidention);
+          });
+          return groupedData;
+        }
       });
     </script>
-    
   </body>
 </html>

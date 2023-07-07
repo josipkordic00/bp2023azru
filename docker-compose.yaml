@@ -23,10 +23,10 @@ services:
     image: mysql
     container_name: mysql
     environment:
-      - MYSQL_DATABASE=ednevnik
-      - MYSQL_USER=ednevnik
-      - MYSQL_PASSWORD=csdigital
-      - MYSQL_ROOT_PASSWORD=csdigital
+      - MYSQL_DATABASE=rezerviranjeUcionica
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=lozinka
+      - MYSQL_ROOT_PASSWORD=lozinka
     volumes:
       - mysql:/var/lib/mysql
     networks:
