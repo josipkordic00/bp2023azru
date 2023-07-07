@@ -3,21 +3,26 @@ from model.relacije import *
 from model.cache import region
 from flask import Flask, request, render_template
 from flask import jsonify
+from flask_wtf.csrf import CSRFProtect
 import json
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
+from datetime import datetime
 import threading
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
+app.config['SECRET_KEY'] = 'your-secret-key'  # Replace with your secret key
+csrf = CSRFProtect(app)
 def json_serializer(data):
     return json.dumps(data).encode('utf-8')
 
 def json_deserializer(data):
     return json.loads(data)
+
+#routes
 @app.route("/evidentions")
 def evidentions():
     evd = session.query(Ucenik).all()
@@ -35,6 +40,20 @@ def index():
 def notifications():
     notif = session.query(Nastavnik).all()
     return render_template('notifications.html', notif=notif)
+@app.route('/readNotification')
+def read():
+    notification_id = request.args.get('id')
+    return render_template('readNotification.html', notification_id=notification_id)
+@app.route('/reserve')
+def reserve():
+    classroom_id = request.args.get('id')
+    return render_template('reserve.html', classroom_id=classroom_id)
+
+
+
+
+
+
 
 @app.route("/evd/evidention")
 def get_evidention():
@@ -96,6 +115,29 @@ def get_classrooms():
         for classroom in classrooms
     ] 
     return jsonify(serialized_classrooms)
+@app.route("/classroom/edit", methods=["PUT"])
+def edit_date():
+    id = request.args.get("id")  # Retrieve the 'id' from the request arguments
+    date = request.json.get("date")  # Retrieve the 'date' from the request JSON
+    if id and date:
+        # Fetch the classroom object based on the provided ID
+        classroom = session.query(Ucionica).get(id)
+        if classroom:
+            # Convert the provided date string to a datetime object
+            updated_date = datetime.strptime(date, "%Y-%m-%d %H:%M")
+            classroom.datum_rezervacije = updated_date
+
+            session.commit()
+
+            # Successfully updated
+            return jsonify({'message': f'Razred sa ID {id} je ažuriran.'}), 200
+        else:
+            # Classroom with the provided ID not found
+            return jsonify({'message': f'Nema razreda s ID {id}.'}), 404
+    else:
+        # ID or date not provided
+        return jsonify({'message': 'ID ili datum nisu pruženi.'}), 400
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -127,8 +127,8 @@
         var cardBody = $('<div>').addClass('card-body d-flex flex-column justify-content-between');
         var cardNumber = $('<h5>').addClass('card-number').text('Classroom Number: ' + item.classroom_number);
         var cardTeacher = $('<p>').addClass('card-teacher').text('Institution: ' + item.institution);
-        var cardDate = $('<p>').addClass('card-date').text('Date: ' + item.date);
-        var reserveLink = $('<a>').attr('href', '#').addClass('btn btn-primary').text('Reserve');
+        var cardDate = $('<p>').addClass('card-date').text('Reserved: ' + item.date);
+        var reserveLink = $('<a>').attr('href', '/reserve?id=' + item.id).addClass('btn btn-primary').text('Reserve');
 
         // Append the elements to the card body
         cardBody.append(cardNumber, cardTeacher, cardDate, reserveLink);

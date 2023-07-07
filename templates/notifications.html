@@ -75,9 +75,15 @@
           var card = $('<div>').addClass('card');
           var cardBody = $('<div>').addClass('card-body d-flex flex-column justify-content-between');
           var teacherName = $('<h5>').addClass('card-teacher').text(item.teacher_name + ' ' + item.teacher_surname);
-          var cardText = $('<p>').addClass('card-text').text(item.text);
+          var cardText = $('<p>').addClass('card-text')
+          var words = item.text.split(' ');
+          var firstThreeWords = words.slice(0, 3);
+          var modifiedText = firstThreeWords.join(' ') + "...";
+          cardText.text(modifiedText);
           var cardDate = $('<p>').addClass('card-date').text(item.date);
-          var readLink = $('<a>').attr('href', '#').addClass('btn btn-primary').text('Read');
+          var readLink = $('<a>').attr('href', '/readNotification?id=' + item.id).addClass('btn btn-primary').text('Read');
+
+
 
           // Append the elements to the card body
           cardBody.append(teacherName, cardText, cardDate, readLink);

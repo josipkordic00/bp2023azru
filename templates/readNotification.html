@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rezerviranje ucionica</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <style>
+      .center-text {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="navbar-brand mx-auto" style="margin-right: 325px !important">
+        Reserve classroom |
+      </div>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item active">
+            <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/classrooms">Classrooms</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/evidentions">Evidentions</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/notifications">Notifications</a>
+          </li>
+        </ul>
+      </div>
+      <a class="nav-link" href="login.html">Logout</a>
+    </nav>
+    <br />
+    <br />
+    
+    <div class="d-flex flex-column">
+      <div class="d-flex flex-row justify-content-around">
+        <div class="name"></div>
+        <a href="/notifications" class="btn btn-primary">Close</a>
+      </div>
+      <br>
+      <br>
+      <div class="center-text">
+        <div class="text" style="width: 16rem;">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate, nemo
+          perferendis expedita ipsam odio sit molestias? Praesentium rerum atque
+          sunt cumque soluta perspiciatis expedita quos ipsam, magnam, molestiae
+          itaque laborum?
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+  $(document).ready(function () {
+    var id = new URLSearchParams(window.location.search).get('id');
+    console.log("ID:", id);
+
+    if (id !== null) {
+      $.ajax({
+        type: "GET",
+        url: "/notif/notifications",
+        success: function (data) {
+          console.log("Data:", data);
+          var nameElement = $(".name");
+          var textElement = $(".text");
+
+          var notification = data.find(function (item) {
+            return item.id === parseInt(id);
+          });
+
+          if (notification) {
+            nameElement.text(notification.teacher_name + " " + notification.teacher_surname);
+            textElement.text(notification.text)
+          } else {
+            console.error("Invalid ID or data not available");
+          }
+
+
+        },
+        error: function (error) {
+          console.error("Nastala je greška:", error);
+        },
+      });
+    } else {
+      console.error("No ID parameter found in the URL");
+    }
+  });
+</script>
+</body>
+</html>
