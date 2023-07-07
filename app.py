@@ -19,14 +19,22 @@ def json_serializer(data):
 def json_deserializer(data):
     return json.loads(data)
 @app.route("/evidentions")
-def index():
+def evidentions():
     evd = session.query(Ucenik).all()
     return render_template('evidentions.html', evd=evd)
+@app.route("/classrooms")
+def classrooms():
+    classes = session.query(Ucenik).all()
+    return render_template('classrooms.html', classes=classes)
 
 @app.route("/")
-def another_page():
+def index():
     index = session.query(Ucionica).all()
     return render_template('index.html', index=index)
+@app.route("/notifications")
+def notifications():
+    notif = session.query(Nastavnik).all()
+    return render_template('notifications.html', notif=notif)
 
 @app.route("/evd/evidention")
 def get_evidention():
@@ -55,6 +63,35 @@ def get_classroom_info():
             "teacher_surname": classroom.nastavnik.prezime,
             "date": classroom.datum_rezervacije,
             "taken":classroom.zauzeto
+        }
+        for classroom in classrooms
+    ] 
+    return jsonify(serialized_classrooms)
+@app.route("/notif/notifications")
+def get_notifications():
+    notifications = session.query(Obavijesti).join(Obavijesti.nastavnik).all()
+    serialized_notifications = [
+        {
+            "id": notification.id,
+            "teacher_name": notification.nastavnik.ime,
+            "teacher_surname": notification.nastavnik.prezime,
+            "text": notification.text
+        }
+        for notification in notifications
+    ] 
+    return jsonify(serialized_notifications)
+
+@app.route("/classes/classrooms")
+def get_classrooms():
+    classrooms = session.query(Ucionica).join(Ucionica.ustanova).join(Ucionica.nastavnik).all()
+    serialized_classrooms = [
+        {
+            "id": classroom.id,
+            "classroom_number": classroom.broj_ucionice,
+            "teacher_name": classroom.nastavnik_ime,
+            "teacher_surname": classroom.nastavnik_prezime,
+            "taken": classroom.zauzeto,
+            "institution": classroom.ustanova_naziv
         }
         for classroom in classrooms
     ] 
