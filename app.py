@@ -6,8 +6,10 @@ from flask import jsonify
 from flask_wtf.csrf import CSRFProtect
 import json
 from flask_socketio import SocketIO, emit
+from sqlalchemy.exc import InvalidRequestError
 from flask_cors import CORS
 from datetime import datetime
+from flask import redirect, url_for
 import threading
 
 app = Flask(__name__)
@@ -48,8 +50,168 @@ def read():
 def reserve():
     classroom_id = request.args.get('id')
     return render_template('reserve.html', classroom_id=classroom_id)
+@app.route('/admin')
+def admin():
+    teachers = session.query(Nastavnik).all()
+    students = session.query(Ucenik).all()
+    institutions = session.query(Ustanova).all()
+    classrooms = session.query(Ucionica).all()
+    data = {
+        'teachers': teachers,
+        'students': students,
+        'institutions': institutions,
+        'classrooms': classrooms
+    }
+    return render_template('admin.html', data=data)
+
+@app.route('/insertStudent', methods=['GET', 'POST'])
+def insertStudent():
+    if request.method == 'POST':
+        try:
+            first_name = request.form.get("first_name")
+            last_name = request.form.get("last_name")
+            email = request.form.get("email")
+            password = request.form.get("password")
+            phone = request.form.get("phone")
+            student = Ucenik(
+                ime=first_name,
+                prezime=last_name,
+                email=email,
+                sifra=password,
+                broj_telefona=phone
+            )
+
+            if not session.in_transaction():
+                with session.begin():
+                    session.add(student)
+            else:
+                session.add(student)
+
+            return redirect(url_for('admin'))
+        except Exception as e:
+            return jsonify({'error': str(e)})
+
+   
+    students = session.query(Ucenik).all()
+    data = {
+        'students': students
+    }
+    return render_template('insertStudent.html', data=data)
+@app.route('/insertTeacher', methods=['GET', 'POST'])
+def insertTeacher():
+    if request.method == 'POST':
+        try:
+            first_name = request.form.get("first_name")
+            last_name = request.form.get("last_name")
+            email = request.form.get("email")
+            password = request.form.get("password")
+            phone = request.form.get("phone")
+            teacher = Nastavnik(
+                ime=first_name,
+                prezime=last_name,
+                email=email,
+                sifra=password,
+                broj_telefona=phone
+            )
+
+            if not session.in_transaction():
+                with session.begin():
+                    session.add(teacher)
+            else:
+                session.add(teacher)
+
+            return redirect(url_for('admin'))
+        except Exception as e:
+            return jsonify({'error': str(e)})
+
+   
+    teachers = session.query(Ucenik).all()
+    data = {
+        'teachers': teachers
+    }
+    return render_template('insertTeacher.html', data=data)
 
 
+@app.route('/admin/deleteStudent/<int:id>', methods=['DELETE'])
+def deleteStudent(id):
+     student = session.query(Ucenik).get(id)
+     if student:
+        session.delete(student)
+        session.commit()
+        return jsonify({'message': f'student sa ID {student} je izbrisan.'}), 200
+
+@app.route('/admin/deleteTeacher/<int:id>', methods=['DELETE'])
+def deleteTeacher(id):
+     teacher = session.query(Nastavnik).get(id)
+     if teacher:
+        session.delete(teacher)
+        session.commit()
+        return jsonify({'message': f'teacher sa ID {teacher} je izbrisan.'}), 200
+@app.route('/admin/deleteClassroom/<int:id>', methods=['DELETE'])
+def deleteClassroom(id):
+     classroom = session.query(Ucionica).get(id)
+     if classroom:
+        session.delete(classroom)
+        session.commit()
+        session.close() 
+        return jsonify({'message': f'classroom sa ID {classroom} je izbrisan.'}), 200
+@app.route('/admin/deleteInstitution/<int:id>', methods=['DELETE'])
+def deleteInstitution(id):
+     institution = session.query(Ustanova).get(id)
+     if institution:
+        session.delete(institution)
+        session.commit()
+        return jsonify({'message': f'institution sa ID {institution} je izbrisan.'}), 200
+
+
+@app.route('/insertClassroom', methods=['GET', 'POST'])
+def insertClassroom():
+    if request.method == 'POST':
+        try:
+            classroom_number = request.form.get("classroom_number")
+            institution_id = request.form.get("institution")
+
+            # Retrieve the institution based on the name
+            
+            
+            # Process other form fields as needed
+            
+            classroom = Ucionica(
+                broj_ucionice=classroom_number,
+                ustanova_id=institution_id,
+                zauzeto=0,
+                datum_rezervacije="2023-05-06 12:00:00",
+                nastavnik_id=1
+                # Set other attributes of the Classroom object
+            )
+            
+            session.add(classroom)
+            session.commit()
+            
+            return jsonify({'message': 'Classroom added successfully.'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
+    classrooms = session.query(Ucionica).all()
+    institutions = session.query(Ustanova).all()
+    data = {
+        'classrooms': classrooms,
+        'institutions': institutions
+    }
+    return render_template('insertClassroom.html', data=data)
+
+
+@app.route("/insertClassroom/class")
+def get_insst():
+    institutions = session.query(Ustanova).all()
+    serialized_institutions = [
+        {
+            "id": institution.id,
+            "institution_name": institution.naziv,
+        }
+        for institution in institutions
+    ] 
+    return jsonify(serialized_institutions)
 
 
 
@@ -117,8 +279,8 @@ def get_classrooms():
     return jsonify(serialized_classrooms)
 @app.route("/classroom/edit", methods=["PUT"])
 def edit_date():
-    id = request.args.get("id")  # Retrieve the 'id' from the request arguments
-    date = request.json.get("date")  # Retrieve the 'date' from the request JSON
+    id = request.args.get("id")
+    date = request.json.get("date")  
     if id and date:
         # Fetch the classroom object based on the provided ID
         classroom = session.query(Ucionica).get(id)
@@ -128,16 +290,54 @@ def edit_date():
             classroom.datum_rezervacije = updated_date
 
             session.commit()
-
-            # Successfully updated
             return jsonify({'message': f'Razred sa ID {id} je ažuriran.'}), 200
         else:
-            # Classroom with the provided ID not found
             return jsonify({'message': f'Nema razreda s ID {id}.'}), 404
     else:
-        # ID or date not provided
         return jsonify({'message': 'ID ili datum nisu pruženi.'}), 400
-
+@app.route("/admin/all")
+def get_all():
+    classrooms = session.query(Ucionica).all()
+    students = session.query(Ucenik).all()
+    teachers = session.query(Nastavnik).all()
+    institutions = session.query(Ustanova).all()
+    serialized_classrooms = [
+        {
+            "id": classroom.id,
+            "classroom_number": classroom.broj_ucionice,
+            "institution": classroom.ustanova_id
+        }
+        for classroom in classrooms
+    ]
+    serialized_students = [
+        {
+            "id": student.id,
+            "first_name": student.ime,
+            "last_name": student.prezime,
+            "email": student.email,
+            "password": student.sifra
+        }
+        for student in students
+    ]
+    serialized_teachers = [
+        {
+            "id": teacher.id,
+            "first_name": teacher.ime,
+            "last_name": teacher.prezime,
+            "email": teacher.email,
+            "password": teacher.sifra
+        }
+        for teacher in teachers
+    ]
+    serialized_institutions = [
+        {
+            "id": institution.id,
+            "name": institution.naziv,
+            "address": institution.adresa
+        }
+        for institution in institutions
+    ]
+    return jsonify(serialized_classrooms, serialized_students, serialized_teachers, serialized_institutions)
 
 if __name__ == '__main__':
     app.run(debug=True)
