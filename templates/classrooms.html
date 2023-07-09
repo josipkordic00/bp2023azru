@@ -44,7 +44,7 @@
           </li>
         </ul>
       </div>
-      <a class="nav-link" href="login.html">Logout</a>
+      <a class="nav-link" href="/admin">Admin</a>
     </nav>
 
     <div class="d-flex flex-column justify-content-center align-items-center">
@@ -79,29 +79,33 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
   $(document).ready(function () {
-    var originalData; // Variable to store the original data from the server
+  var originalData; // Variable to store the original data from the server
 
-    // Fetch the data from the server
-    $.ajax({
-      type: "GET",
-      url: "/index/classroom",
-      success: function (data) {
-        console.log(data);
+  // Fetch the data from the server
+  $.ajax({
+    type: "GET",
+    url: "/index/classroom",
+    success: function (data) {
+      console.log(data);
 
-        originalData = data; // Store the original data
+      originalData = data; // Store the original data
 
-        var selectElement = $('.custom-select'); // Get the select element
+      var selectElement = $('.custom-select'); // Get the select element
 
-        // Populate the select element with options
-        data.forEach(function (item) {
+      // Populate the select element with options
+      data.forEach(function (item) {
+        var optionExists = selectElement.find('option[value="' + item.institution + '"]').length > 0;
+        if (!optionExists) {
           var option = $('<option>').attr('value', item.institution).text(item.institution);
           selectElement.append(option);
-        });
-      },
-      error: function (error) {
-        console.error("Nastala je greška:", error);
-      },
-    });
+        }
+      });
+    },
+    error: function (error) {
+      console.error("Nastala je greška:", error);
+    },
+  });
+
 
     // Event listener for select change
     $('.custom-select').on('change', function () {

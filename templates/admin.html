@@ -29,7 +29,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav"></div>
-      <a class="nav-link" href="login.html">Logout</a>
+      <a class="nav-link" href="/admin">Admin</a>
     </nav>
    
         <div
@@ -57,23 +57,6 @@
       <!-- Add similar container divs for other sections (teachers, classrooms, institutions) -->
     
     
-    <div
-    class="teachers m-1 p-1 d-flex flex-row align-items-center" id="classrooms-container"
-    style="border-bottom: 1px solid #e4e3e3"
-  >
-  <div class="d-flex flex-column">
-    <h3 style="width: 200px">Classrooms</h3>
-    <a href="/insertClassroom" class="btn btn-info m-1" style="width:100px">Insert</a>
-</div>
-  </div>
-  <div
-  class="m-1 p-1 d-flex flex-row align-items-center" id="institutions-container"
-  style="border-bottom: 1px solid #e4e3e3"
->
-<div class="d-flex flex-column">
-    <h3 style="width: 200px">Institutions</h3>
-    <a href="#" class="btn btn-info m-1" style="width:100px">Insert</a>
-</div>
 </div>
     </div>
     <script
@@ -117,30 +100,13 @@
               }
       
               // Populate Classrooms section
-              var classroomsContainer = $("#classrooms-container");
-              for (var i = 0; i < data[0].length; i++) {
-                var card;
-                var classroom = data[0][i]; //{classroom_number: 1, id: 1, institution: 1}
-                for (var j = 0; j < data[3].length; j++)
-                {
-                   if(classroom.institution === data[3][j].id){
-                    var card = createCard(classroom.number, data[3][j].name, classroom.id);
-                   }
-
-                }
-                classroomsContainer.append(card);
-              }
+              
                 
                 
                 
       
               // Populate Institutions section
-              var institutionsContainer = $("#institutions-container");
-              for (var i = 0; i < data[3].length; i++) {
-                var institution = data[3][i];
-                var card = createCard(institution.name, institution.address, institution.id);
-                institutionsContainer.append(card);
-              }
+              
       
               // Add similar code to populate other sections (teachers, institutions, institutions)
             },
@@ -169,21 +135,6 @@
         $.ajax({
             type: "DELETE",
             url: "http://127.0.0.1:5000/admin/deleteTeacher/" + id,
-            beforeSend: function(xhr) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    },
-            success: function(data) {
-                if (data.message) {
-                    card.remove();
-                    }
-                },
-            error: function(error) {
-                console.error('Nastala je greška:', error);
-            }
-        });
-        $.ajax({
-            type: "DELETE",
-            url: "http://127.0.0.1:5000/admin/deleteClassroom/" + id,
             beforeSend: function(xhr) {
         xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
     },

@@ -147,71 +147,12 @@ def deleteTeacher(id):
         session.delete(teacher)
         session.commit()
         return jsonify({'message': f'teacher sa ID {teacher} je izbrisan.'}), 200
-@app.route('/admin/deleteClassroom/<int:id>', methods=['DELETE'])
-def deleteClassroom(id):
-     classroom = session.query(Ucionica).get(id)
-     if classroom:
-        session.delete(classroom)
-        session.commit()
-        session.close() 
-        return jsonify({'message': f'classroom sa ID {classroom} je izbrisan.'}), 200
-@app.route('/admin/deleteInstitution/<int:id>', methods=['DELETE'])
-def deleteInstitution(id):
-     institution = session.query(Ustanova).get(id)
-     if institution:
-        session.delete(institution)
-        session.commit()
-        return jsonify({'message': f'institution sa ID {institution} je izbrisan.'}), 200
 
 
-@app.route('/insertClassroom', methods=['GET', 'POST'])
-def insertClassroom():
-    if request.method == 'POST':
-        try:
-            classroom_number = request.form.get("classroom_number")
-            institution_id = request.form.get("institution")
-
-            # Retrieve the institution based on the name
-            
-            
-            # Process other form fields as needed
-            
-            classroom = Ucionica(
-                broj_ucionice=classroom_number,
-                ustanova_id=institution_id,
-                zauzeto=0,
-                datum_rezervacije="2023-05-06 12:00:00",
-                nastavnik_id=1
-                # Set other attributes of the Classroom object
-            )
-            
-            session.add(classroom)
-            session.commit()
-            
-            return jsonify({'message': 'Classroom added successfully.'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    classrooms = session.query(Ucionica).all()
-    institutions = session.query(Ustanova).all()
-    data = {
-        'classrooms': classrooms,
-        'institutions': institutions
-    }
-    return render_template('insertClassroom.html', data=data)
 
 
-@app.route("/insertClassroom/class")
-def get_insst():
-    institutions = session.query(Ustanova).all()
-    serialized_institutions = [
-        {
-            "id": institution.id,
-            "institution_name": institution.naziv,
-        }
-        for institution in institutions
-    ] 
-    return jsonify(serialized_institutions)
+
+
 
 
 
