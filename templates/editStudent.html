@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Insert user</title>
+    <title>Edit user</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
@@ -13,40 +13,40 @@
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="navbar-brand mx-auto" style="margin-right: 325px !important">
-        Reserve classroom |
-      </div>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-toggle="collapse"
-        data-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item ">
-            <a class="nav-link" href="/">Home </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/classrooms">Classrooms</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/evidentions">Evidentions</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/notifications">Notifications</a>
-          </li>
-        </ul>
-      </div>
-      <a class="nav-link" href="/admin">Admin</a>
-    </nav>
+        <div class="navbar-brand mx-auto" style="margin-right: 325px !important">
+          Reserve classroom |
+        </div>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item ">
+              <a class="nav-link" href="/">Home </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/classrooms">Classrooms</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/evidentions">Evidentions</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/notifications">Notifications</a>
+            </li>
+          </ul>
+        </div>
+        <a class="nav-link" href="/admin">Admin</a>
+      </nav>
     <div class="container d-flex justify-content-center align-items-center">
-      <form class="d-flex flex-column justify-content-between align-items-center m-1 w-50" method="POST">
+      <form class="d-flex flex-column justify-content-between align-items-center m-1 w-50" action="/editStudent/edit" method="POST">
         <input id="first_name" class="m-1 p-1 col-12" style="width: 100%; max-width: 600px" name="first_name" type="text" placeholder="First name" />
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input id="last_name" class="m-1 p-1 col-12" style="width: 100%; max-width: 600px" name="last_name" type="text" placeholder="Last name" />
@@ -54,7 +54,7 @@
         <input id="password" class="m-1 p-1 col-12" style="width: 100%; max-width: 600px" name="password" type="password" placeholder="Password" />
         <input id="phone" class="m-1 p-1 col-12" style="width: 100%; max-width: 600px" name="phone" type="number" placeholder="Phone" />
       
-        <input class="btn btn-primary" id="insertTeacher" type="submit" value="Save" style="color: white" />
+        <input class="btn btn-primary" id="EditStudent" type="submit" value="Save" style="color: white" />
       </form>
       
     </div>
@@ -76,9 +76,14 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
   
-  $(document).on("click", "#insertTeacher", function () {
+  $(document).on("click", "#EditStudent", function () {
+var id = new URLSearchParams(window.location.search).get("id");
   // Disable the submit button to prevent multiple form submissions
-  $("#insertTeacher").prop("disabled", true);
+  $("#EditStudent").prop("disabled", true);
+ // Prevent the default form submission
+
+      // Get the CSRF token from the meta tag
+      var csrfToken = $("meta[name=csrf-token]").attr("content");
 
   var formData = {
     first_name: $("#first_name").val(),
@@ -89,16 +94,19 @@
   };
 
   $.ajax({
-    type: "POST",
-    url: "/insertTeacher",
-    data: formData,
-    beforeSend: function(xhr) {
-      xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    type: "PUT",
+    url: "/editStudent/edit?id=" + id,
+    data: JSON.stringify(formData), // Send the form data as JSON
+    dataType: "json", // Specify the expected data type of the response
+    contentType: "application/json", // Set the content type to JSON
+    headers: {
+        "X-CSRFToken": csrfToken, // Include the CSRF token in the request headers
     },
     success: function (response) {
-      console.log("Razred dodan!");
-      window.location.href = "/admin"
-    },
+  console.log("Data:", response);
+  // Redirect to the /admin path
+  window.location.href = "/admin";
+},
     error: function (error) {
       console.error("Nastala je greška:", error);
     },

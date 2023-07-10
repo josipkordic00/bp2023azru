@@ -31,7 +31,8 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item active">
-            <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a
+            <a class="nav-link" href="/"
+              >Home <span class="sr-only">(current)</span></a
             >
           </li>
           <li class="nav-item">
@@ -43,7 +44,6 @@
           <li class="nav-item">
             <a class="nav-link" href="/notifications">Notifications</a>
           </li>
-          
         </ul>
       </div>
       <a class="nav-link" href="/admin">Admin</a>
@@ -61,6 +61,8 @@
       <br />
       <br />
       <div id="poruka"></div>
+      <br />
+      <div id="container"></div>
     </div>
 
     <script
@@ -81,68 +83,89 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
       $(document).ready(function () {
-  $.ajax({
-    type: "GET",
-    url: "/index/classroom",
-    success: function (data) {
-      console.log(data);
+        $.ajax({
+          type: "GET",
+          url: "/index/classroom",
+          success: function (data) {
+            console.log(data);
 
-      function populateInstitutions() {
-        const institutionSelect = $('#institution');
-        institutionSelect.empty(); // Clear existing options
+            function populateInstitutions() {
+              const institutionSelect = $("#institution");
+              institutionSelect.empty(); // Clear existing options
 
-        const institutions = [...new Set(data.map(item => item.institution))]; // Get unique institutions
+              const institutions = [
+                ...new Set(data.map((item) => item.institution)),
+              ]; // Get unique institutions
 
-        // Create and append option elements for each institution
-        institutions.forEach(institution => {
-          const option = $('<option>').text(institution);
-          institutionSelect.append(option);
+              // Create and append option elements for each institution
+              institutions.forEach((institution) => {
+                const option = $("<option>").text(institution);
+                institutionSelect.append(option);
+              });
+            }
+
+            function populateClassrooms(selectedInstitution) {
+              const classroomSelect = $("#classroom");
+              classroomSelect.empty(); // Clear existing options
+
+              const filteredClassrooms = data.filter(
+                (item) => item.institution === selectedInstitution
+              );
+
+              // Create and append option elements for each classroom
+              filteredClassrooms.forEach((classroom) => {
+                const option = $("<option>").text(classroom.classroom_number);
+                classroomSelect.append(option);
+              });
+
+              classroomSelect.change(function () {
+                const selectedClassroom = $(this).val();
+                const porukaElement = $("#poruka");
+                data.forEach((classroom) => {
+                  if (selectedClassroom == classroom.classroom_number) {
+                    if (classroom.taken === true) {
+                      porukaElement.text(
+                        "This classroom is taken " + classroom.date
+                      );
+                    } else {
+                      porukaElement.text("This classroom is free");
+                      var reserveLink = $("<a>")
+                        .attr("href", "/reserve?id=" + classroom.id)
+                        .addClass("btn btn-primary")
+                        .text("Reserve");
+
+                      // Create the container div
+                      var containerDiv = $("<div>").attr("id", "container");
+
+                      // Append the button to the container div
+                      containerDiv.append(reserveLink);
+
+                      // Insert the container div at the desired position
+                      $("#poruka").after("<br>", containerDiv);
+
+                      $("#btn").show();
+                    }
+                  }
+                });
+              });
+
+              // Trigger the change event on initial load to display the correct message
+              classroomSelect.trigger("change");
+            }
+
+            $("#institution").change(function () {
+              const selectedInstitution = $(this).val();
+              populateClassrooms(selectedInstitution);
+            });
+
+            populateInstitutions();
+            populateClassrooms($("#institution").val());
+          },
+          error: function (error) {
+            console.error("Nastala je greška:", error);
+          },
         });
-      }
-
-      function populateClassrooms(selectedInstitution) {
-  const classroomSelect = $('#classroom');
-  classroomSelect.empty(); // Clear existing options
-
-  const filteredClassrooms = data.filter(item => item.institution === selectedInstitution);
-
-  // Create and append option elements for each classroom
-  filteredClassrooms.forEach(classroom => {
-    const option = $('<option>').text(classroom.classroom_number);
-    classroomSelect.append(option);
-  });
-
-  classroomSelect.change(function() {
-    const selectedClassroom = $(this).val();
-    const selectedClassroomData = filteredClassrooms.find(classroom => classroom.classroom_number === selectedClassroom);
-
-    const porukaElement = $('#poruka');
-    porukaElement.text(selectedClassroomData.taken ? 'This classroom is taken.' : 'This classroom is free');
-  });
-
-  // Trigger the change event on initial load to display the correct message
-  classroomSelect.trigger('change');
-}
-
-
-      $('#institution').change(function () {
-        const selectedInstitution = $(this).val();
-        populateClassrooms(selectedInstitution);
       });
-
-      populateInstitutions();
-      populateClassrooms($('#institution').val());
-    },
-    error: function (error) {
-      console.error("Nastala je greška:", error);
-    },
-  });
-});
-
     </script>
-    
-    
-    
-    
   </body>
 </html>

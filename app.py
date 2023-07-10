@@ -10,6 +10,7 @@ from sqlalchemy.exc import InvalidRequestError
 from flask_cors import CORS
 from datetime import datetime
 from flask import redirect, url_for
+import logging
 import threading
 
 app = Flask(__name__)
@@ -23,7 +24,9 @@ def json_serializer(data):
 
 def json_deserializer(data):
     return json.loads(data)
-
+app.logger.setLevel(logging.DEBUG)
+stream_handler = logging.StreamHandler()
+app.logger.addHandler(stream_handler)
 #routes
 @app.route("/evidentions")
 def evidentions():
@@ -50,6 +53,10 @@ def read():
 def reserve():
     classroom_id = request.args.get('id')
     return render_template('reserve.html', classroom_id=classroom_id)
+@app.route('/editStudent')
+def edittt():
+    student_id = request.args.get('id')
+    return render_template('editStudent.html', student_id=student_id)
 @app.route('/admin')
 def admin():
     teachers = session.query(Nastavnik).all()
@@ -146,17 +153,40 @@ def deleteTeacher(id):
      if teacher:
         session.delete(teacher)
         session.commit()
+        
         return jsonify({'message': f'teacher sa ID {teacher} je izbrisan.'}), 200
 
+@app.route("/editStudent/edit", methods=["PUT"])
+def edit_class():
+    id = request.args.get("id")
+    ime = str(request.json.get("first_name"))
+    prezime = str(request.json.get("last_name"))
+    email = str(request.json.get("email"))
+    sifra = str(request.json.get("password"))
+    phone = int(request.json.get("phone"))
+    
+    if id:  
+        student = session.query(Ucenik).get(id)
+        if student: 
+            if ime: 
+                student.ime = ime
+            if prezime: 
+                student.prezime = prezime
+            if email: 
+                student.email = email
+            if sifra: 
+                student.sifra = sifra
+            if phone: 
+                student.phone = phone
+            
+            session.commit()
 
 
-
-
-
-
-
-
-
+            return jsonify({'message': f'student sa ID {id} je ažuriran.'}), 200
+        else:
+            return jsonify({'message': f'Nema studenta s ID {id}.'}), 404
+    else:
+        return jsonify({'message': 'ID nije pružen.'}), 400
 
 @app.route("/evd/evidention")
 def get_evidention():
